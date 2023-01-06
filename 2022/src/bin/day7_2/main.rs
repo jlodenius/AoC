@@ -45,6 +45,28 @@ fn main() {
         println!("{} -> {}", key, val);
     }
 
-    let result: u32 = sizes.into_values().filter(|&size| size <= 100_000).sum();
-    println!("Result -> {}", result)
+    let sizes_copy = sizes.clone();
+    let mut all_sizes: Vec<u32> = sizes.into_values().collect();
+    all_sizes.sort();
+
+    let used_space = all_sizes.iter().rev().next().unwrap();
+    let total_space = 70_000_000;
+    let required_free_space = 30_000_000;
+    let space_to_free = required_free_space - (total_space - used_space);
+
+    println!(
+        "Total space {}\nRequired space {}\nUsed space {}\nSpace to free {}",
+        total_space, required_free_space, used_space, space_to_free,
+    );
+
+    let folder_to_delete = all_sizes
+        .iter()
+        .find(|&size| size >= &space_to_free)
+        .unwrap();
+
+    for (key, value) in &sizes_copy {
+        if value == folder_to_delete {
+            println!("delete folder {}, with size {}", key, value);
+        }
+    }
 }
