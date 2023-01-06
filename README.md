@@ -1,4 +1,4 @@
 # AoC
 
 ## 2022 - Rust
-> First time trying out rust
+> First time trying out Rust
