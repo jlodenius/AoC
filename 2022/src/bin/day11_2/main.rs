@@ -2,16 +2,16 @@ use std::{cmp::Reverse, fs, str::Lines};
 
 #[derive(Debug, Clone)]
 struct Monkey<'a> {
-    items: Vec<u32>,
-    times_inspected: u32,
+    items: Vec<u64>,
+    times_inspected: u64,
     operation: Vec<&'a str>,
-    divide_by: u32,
+    divide_by: u64,
     if_true: usize,
     if_false: usize,
 }
 
 fn create_monkey<'a>(iterator: &mut Lines<'a>) -> Monkey<'a> {
-    let mut items: Vec<u32> = vec![];
+    let mut items: Vec<u64> = vec![];
     let mut operation: Vec<&str> = vec![];
     let mut divide_by = 0;
     let mut if_true = 0;
@@ -27,14 +27,14 @@ fn create_monkey<'a>(iterator: &mut Lines<'a>) -> Monkey<'a> {
             ["  Starting items", rest] => {
                 items = rest
                     .split_terminator(",")
-                    .map(|num_str| num_str.trim().parse::<u32>().unwrap())
+                    .map(|num_str| num_str.trim().parse::<u64>().unwrap())
                     .collect();
             }
             ["  Operation", rest] => {
                 operation = rest.split_whitespace().rev().take(2).collect::<Vec<&str>>();
             }
             ["  Test", rest] => {
-                let test: u32 = rest
+                let test: u64 = rest
                     .split_whitespace()
                     .collect::<Vec<&str>>()
                     .pop()
@@ -79,25 +79,25 @@ fn create_monkey<'a>(iterator: &mut Lines<'a>) -> Monkey<'a> {
     };
 }
 
-fn do_round(monkeys: &mut [Monkey]) {
+fn do_round(monkeys: &mut [Monkey], divisor_product: u64) {
     for idx in 0..monkeys.len() {
         // Have to copy the monkey to be able to iter over the items
         // and still have access to values inside monkeys
         let monkey_copy;
         let monkey = &mut monkeys[idx];
         monkey_copy = monkey.clone();
-        monkey.times_inspected += monkey.items.len() as u32;
+        monkey.times_inspected += monkey.items.len() as u64;
 
         for item_to_inspect in monkey_copy.items.iter().copied() {
             let mut item_worry_level = match monkey_copy.operation[..] {
                 ["old", "*"] => item_to_inspect * item_to_inspect,
-                [x, "+"] => item_to_inspect + x.parse::<u32>().unwrap(),
-                [x, "*"] => item_to_inspect * x.parse::<u32>().unwrap(),
+                [x, "+"] => item_to_inspect + x.parse::<u64>().unwrap(),
+                [x, "*"] => item_to_inspect * x.parse::<u64>().unwrap(),
                 _ => {
                     panic!("Fail");
                 }
             };
-            item_worry_level /= 3;
+            item_worry_level %= divisor_product;
             let passes_test = item_worry_level % monkey_copy.divide_by == 0;
             let throw_to = match passes_test {
                 true => monkey_copy.if_true,
@@ -124,17 +124,19 @@ fn main() {
         monkeys.push(create_monkey(iterator));
     }
 
-    for _round in 0..20 {
-        do_round(&mut monkeys);
+    let divisor_product = monkeys.iter().map(|m| m.divide_by).product::<u64>();
+
+    for _round in 0..10_000 {
+        do_round(&mut monkeys, divisor_product);
     }
 
     let mut inspected_times_vec = monkeys
         .iter()
         .map(|monkey| monkey.times_inspected)
-        .collect::<Vec<u32>>();
+        .collect::<Vec<u64>>();
 
     inspected_times_vec.sort_by_key(|&c| Reverse(c));
-    let monkey_business = inspected_times_vec.into_iter().take(2).product::<u32>();
+    let monkey_business = inspected_times_vec.into_iter().take(2).product::<u64>();
 
     println!("Level of monkey business: {}", monkey_business);
 }
