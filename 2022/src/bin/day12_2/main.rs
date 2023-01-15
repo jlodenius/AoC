@@ -49,8 +49,6 @@ fn valid_path(
     let current_value = grid[current_node.0][current_node.1];
     let target_value = grid[target_node.0][target_node.1];
 
-    // TODO: Remove?????????
-    let is_same_as_current = target_node == current_node;
     let is_unvisited = match unvisited_nodes.get(&target_node) {
         Some(_) => true,
         None => false,
@@ -63,7 +61,7 @@ fn valid_path(
         }
     };
 
-    return is_walkable && !is_same_as_current && is_unvisited;
+    return is_walkable && is_unvisited;
 }
 
 fn get_surrounding_nodes(
