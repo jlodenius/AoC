@@ -112,7 +112,7 @@ fn main() {
         points: HashMap::new(),
     };
 
-    // Inser "air"
+    // Insert "air"
     for y in min_y..=max_y {
         for x in min_x..=max_x {
             grid.points.insert((y, x), '.');
