@@ -67,7 +67,7 @@ fn main() {
     for line in include_str!("input.txt").split("\n") {
         // because last line..
         if line == "" {
-            continue;
+            break;
         }
         let mut polyline = Polyline { line: vec![] };
         for xy_pairs in line.split(" -> ") {
