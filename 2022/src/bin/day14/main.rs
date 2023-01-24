@@ -1,12 +1,13 @@
 use std::{
+    cmp::{max, min},
     collections::{HashMap, HashSet},
     fmt::{Display, Formatter, Result},
 };
 
 #[derive(PartialEq, Eq, Debug)]
 struct Point {
-    y: usize,
     x: usize,
+    y: usize,
 }
 
 #[derive(Debug)]
@@ -22,15 +23,15 @@ impl Polyline {
             let b = &window[1];
 
             // each point will only move in either x or y
-            let move_y = a.y != b.y;
+            let move_x = a.x != b.x;
 
-            if move_y {
-                for y in a.y..=b.y {
-                    points_set.insert((y, a.x));
+            if move_x {
+                for x in min(a.x, b.x)..=max(a.x, b.x) {
+                    points_set.insert((x, a.y));
                 }
             } else {
-                for x in a.x..=b.x {
-                    points_set.insert((a.y, x));
+                for y in min(a.y, b.y)..=max(a.y, b.y) {
+                    points_set.insert((a.x, y));
                 }
             }
         }
@@ -43,6 +44,7 @@ struct Grid {
     max_x: usize,
     min_y: usize,
     max_y: usize,
+    starting_pos: (usize, usize),
     points: HashMap<(usize, usize), char>,
 }
 
@@ -52,12 +54,33 @@ impl Display for Grid {
         for y in self.min_y..=self.max_y {
             let mut line = String::new();
             for x in self.min_x..=self.max_x {
-                line.push(*self.points.get(&(y, x)).unwrap());
+                line.push(*self.points.get(&(x, y)).unwrap());
             }
             the_str.push_str(&line);
             the_str.push('\n');
         }
         return f.write_str(&the_str);
+    }
+}
+
+impl Grid {
+    fn get_next_pos(&mut self, pos: (usize, usize)) -> Option<(usize, usize)> {
+        let one = (pos.0, pos.1 + 1); // below
+        let two = (pos.0 - 1, pos.1 + 1); // left
+        let thr = (pos.0 + 1, pos.1 + 1); // right
+
+        for p in [one, two, thr] {
+            match self.points.get(&p) {
+                Some(val) => {
+                    if val == &'.' {
+                        return self.get_next_pos(p);
+                    }
+                }
+                None => return None, // this means we are outside of the grid
+            };
+        }
+        self.points.insert(pos, '+');
+        Some(pos)
     }
 }
 
@@ -75,7 +98,7 @@ fn main() {
             let x: usize = xy.next().unwrap().parse().unwrap();
             let y: usize = xy.next().unwrap().parse().unwrap();
 
-            polyline.line.push(Point { y, x })
+            polyline.line.push(Point { x, y })
         }
         lines.push(polyline);
     }
@@ -105,17 +128,18 @@ fn main() {
 
     // Create and populate the grid
     let mut grid = Grid {
-        min_y,
-        max_y,
-        min_x,
-        max_x,
+        min_y: 0,         // lets set to 0
+        max_y: max_y + 5, // and expand bottom
+        min_x: min_x - 5, // and increase width
+        max_x: max_x + 5, // and increase width
+        starting_pos: (500, 0),
         points: HashMap::new(),
     };
 
     // Insert "air"
-    for y in min_y..=max_y {
-        for x in min_x..=max_x {
-            grid.points.insert((y, x), '.');
+    for y in grid.min_y..=grid.max_y {
+        for x in grid.min_x..=grid.max_x {
+            grid.points.insert((x, y), '.');
         }
     }
 
@@ -127,5 +151,14 @@ fn main() {
         }
     }
 
+    // Insert "sand"
+    let mut sand = 0;
+    let mut pos = grid.get_next_pos(grid.starting_pos);
+    while pos != Option::None {
+        sand += 1;
+        pos = grid.get_next_pos(grid.starting_pos);
+    }
+
     println!("{}", grid);
+    println!("Amount of sand {}", sand);
 }
