@@ -80,11 +80,18 @@ impl Grid {
             };
         }
         self.points.insert(pos, '+');
+
+        // place sand on start pos = close the flow
+        // aka exit recursion
+        if pos == self.starting_pos {
+            return None;
+        }
+
         Some(pos)
     }
 }
 
-fn main() {
+fn part_one() {
     let mut lines: Vec<_> = vec![];
 
     for line in include_str!("input.txt").split("\n") {
@@ -153,7 +160,95 @@ fn main() {
 
     // Insert "sand"
     let mut sand = 0;
-    let mut pos = grid.get_next_pos(grid.starting_pos);
+    let mut pos = Some((0, 0)); // dummy value to enter loop
+    while pos != Option::None {
+        pos = grid.get_next_pos(grid.starting_pos);
+
+        if pos != None {
+            sand += 1
+        }
+    }
+
+    println!("{}", grid);
+    println!("Amount of sand {}", sand);
+}
+
+// lots of repetition from p1 in p2 but whatever
+fn part_two() {
+    let mut lines: Vec<_> = vec![];
+
+    for line in include_str!("input.txt").split("\n") {
+        // because last line..
+        if line == "" {
+            break;
+        }
+        let mut polyline = Polyline { line: vec![] };
+        for xy_pairs in line.split(" -> ") {
+            let mut xy = xy_pairs.split(",");
+            let x: usize = xy.next().unwrap().parse().unwrap();
+            let y: usize = xy.next().unwrap().parse().unwrap();
+
+            polyline.line.push(Point { x, y })
+        }
+        lines.push(polyline);
+    }
+
+    // Find smallest and biggest points to determine how big the grid is
+    let points: Vec<&Point> = lines.iter().flat_map(|pl| &pl.line).collect();
+
+    let mut min_y = usize::max_value();
+    let mut min_x = usize::max_value();
+    let mut max_y = usize::min_value();
+    let mut max_x = usize::min_value();
+
+    for point in points {
+        if point.x < min_x {
+            min_x = point.x
+        }
+        if point.y < min_y {
+            min_y = point.y
+        }
+        if point.x > max_x {
+            max_x = point.x
+        }
+        if point.y > max_y {
+            max_y = point.y
+        }
+    }
+
+    // Create and populate the grid
+    let mut grid = Grid {
+        min_y: 0,           // lets set to 0
+        max_y: max_y + 2,   // floor is 2 after max_y
+        min_x: min_x - 400, // increase width alot to simulate "infinite floor"
+        max_x: max_x + 400, // ...
+        starting_pos: (500, 0),
+        points: HashMap::new(),
+    };
+
+    // Insert "air"
+    for y in grid.min_y..=grid.max_y {
+        for x in grid.min_x..=grid.max_x {
+            grid.points.insert((x, y), '.');
+        }
+    }
+
+    // Insert "rocks"
+    for pl in lines.iter() {
+        let points = pl.get_points();
+        for p in points.iter() {
+            grid.points.insert(*p, '#');
+        }
+    }
+
+    // Insert floor of "rocks"
+    for bottom_x in grid.min_x..=grid.max_x {
+        grid.points.insert((bottom_x, grid.max_y), '#');
+    }
+
+    // Insert "sand"
+    let mut sand = 0;
+    let mut pos = Some((0, 0)); // dummy value to enter loop
     while pos != Option::None {
         sand += 1;
         pos = grid.get_next_pos(grid.starting_pos);
@@ -161,4 +256,9 @@ fn main() {
 
     println!("{}", grid);
     println!("Amount of sand {}", sand);
+}
+
+fn main() {
+    part_one();
+    part_two();
 }
