@@ -92,13 +92,14 @@ fn part_one() {
     // Calculations
     let mut current_valve = &valves[0];
     let mut minute: u32 = 1;
-    let mut total_score = 0;
+    let mut total_score: u32 = 0;
     let mut active_valves: Vec<&str> = vec![];
 
     // Start loop
     while minute < 30 {
         println!("Min {minute}");
         println!("You are at valve {}", current_valve.name);
+        println!("Active valves are {:?}", active_valves);
 
         let minutes_left = (30 - minute) as u32;
 
@@ -115,12 +116,11 @@ fn part_one() {
             let shortest_path = shortest_path_between(current_valve, valve, &valve_map, 1, vec![]);
             let shortest_path_len = shortest_path.len() as u32;
 
-            // No value
             if minutes_left <= shortest_path_len {
                 continue;
             }
 
-            let value = (minutes_left - shortest_path_len - 1) as u32 * valve.flow_rate;
+            let value = (minutes_left - shortest_path_len) as u32 * valve.flow_rate;
 
             println!(
                 "Shortest path to {} {:?} | flow_rate {}",
@@ -135,7 +135,11 @@ fn part_one() {
                 }
                 None => current_highest_value = Some((valve, value, shortest_path_len as u32)),
             }
-            println!("VALUE -> {}", value);
+
+            println!(
+                "VALUE ({minutes_left} - {shortest_path_len}) * {} -> {}",
+                valve.flow_rate, value
+            );
         }
 
         // UPDATE VALUES AND SET VALVE TO ACTIVE
@@ -144,7 +148,7 @@ fn part_one() {
                 active_valves.push(&high_valve.name);
                 current_valve = high_valve;
                 total_score += high_score;
-                minute += high_path;
+                minute += high_path + 1; // takes 1 min to turn it on
             }
             None => {
                 // Nothing more to do
