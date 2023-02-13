@@ -80,15 +80,38 @@ fn part_one() {
     // Starting state
     let score = 0;
     let minutes_left = 30;
-    let closed_valves: Vec<ValveName> = valves.iter().map(|v| v.name).collect();
-    println!("closed valves {closed_valves:?}");
+    let closed_valves: Vec<ValveName> = valves
+        .iter()
+        // Remove all Valves with a flow rate of 0,
+        // except for AA since its our starting point
+        .filter(|v| v.flow_rate > 0 || v.name == ValveName(*b"AA"))
+        .map(|v| v.name)
+        .collect();
 
-    // Starting node
+    println!("relevant valves {closed_valves:?}");
+
+    // Find shortest path between each valve, and store it in a cache
+    // to avoid running the same operations multiple times in recursion
+    let mut cache: HashMap<(ValveName, ValveName), i32> = HashMap::new();
+    for v1 in closed_valves.iter() {
+        for v2 in closed_valves.iter() {
+            let from = valve_map.get(v1).unwrap();
+            let to = valve_map.get(v2).unwrap();
+            if from.name != to.name {
+                cache.insert(
+                    (*v1, *v2),
+                    get_shortest_path(from, to, &valve_map, vec![], 1),
+                );
+            }
+        }
+    }
+
+    // Starting Valve
     let a = valve_map.get(&ValveName(['A' as u8, 'A' as u8])).unwrap();
 
     // Brute force each path to find best score
     let start = Instant::now();
-    let max_value = brute_force(a, closed_valves, &valve_map, minutes_left, score);
+    let max_value = brute_force(a, closed_valves, &valve_map, minutes_left, score, &cache);
     let duration = start.elapsed();
 
     println!("max value is = {max_value}");
@@ -107,25 +130,19 @@ fn brute_force(
     valve_map: &HashMap<ValveName, &Valve>,
     minutes_left: i32,
     score: i32,
+    gsp_cache: &HashMap<(ValveName, ValveName), i32>,
 ) -> i32 {
+    if minutes_left == 0 {
+        return score;
+    }
     // 1. Find the shortest path to each closed valve (filtering out current valve)
     closed_valves
         .iter()
-        // Dont check any valves with 0 flow rate
-        // Or the one we are currently at
-        .filter(|v| {
-            let b = valve_map.get(v).unwrap();
-            match b.flow_rate {
-                0 => false,
-                _ => *v != &current_valve.name,
-            }
-        })
+        .filter(|v| *v != &current_valve.name)
         .map(|closed_valve| {
             let b = valve_map.get(closed_valve).unwrap();
-            let shortest_path = get_shortest_path(current_valve, b, valve_map, vec![], 1);
-            // println!("shortest path to {:?} = {shortest_path}", b.name);
-            let total_score = calc_total_score(shortest_path, minutes_left, b.flow_rate);
-            // println!("opening would yield {total_score}");
+            let shortest_path = gsp_cache.get(&(current_valve.name, *closed_valve)).unwrap();
+            let total_score = calc_total_score(*shortest_path, minutes_left, b.flow_rate);
 
             let mut new_closed_valves = closed_valves.clone();
             new_closed_valves.retain(|v| v != closed_valve);
@@ -133,8 +150,9 @@ fn brute_force(
                 b,
                 new_closed_valves,
                 valve_map,
-                minutes_left - shortest_path - 1,
+                cmp::max(0, minutes_left - shortest_path - 1),
                 score + total_score,
+                gsp_cache,
             );
         })
         .max()
