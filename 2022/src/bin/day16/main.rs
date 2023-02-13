@@ -257,12 +257,6 @@ fn part_two() {
                 .cloned()
                 .collect();
 
-            // This is honestly just a stupid assumption
-            // but it halves the computation time and still works
-            if split_a.len() < 5 || split_b.len() < 5 {
-                continue;
-            }
-
             let combination_score = brute_force(a, split_a, &valve_map, 26, 0, &cache)
                 + brute_force(a, split_b, &valve_map, 26, 0, &cache);
 
