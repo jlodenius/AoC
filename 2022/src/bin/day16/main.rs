@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::{cmp, collections::HashMap, fmt::Debug, hash::Hash, time::Instant};
 
 use nom::{
@@ -57,65 +58,6 @@ impl Valve {
             },
         )(input)
     }
-}
-
-// Sample input
-// Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
-fn part_one() {
-    // Parsing
-    let valves: Vec<Valve> = include_str!("input.txt")
-        .lines()
-        .map(|line| {
-            let valve = all_consuming(Valve::parse_v2)(line).finish().unwrap().1;
-            return valve;
-        })
-        .collect();
-
-    // Put valves in HashMap for easy access
-    let mut valve_map = HashMap::new();
-    for valve in valves.iter() {
-        valve_map.insert(valve.name, valve);
-    }
-
-    // Starting state
-    let score = 0;
-    let minutes_left = 30;
-    let closed_valves: Vec<ValveName> = valves
-        .iter()
-        // Remove all Valves with a flow rate of 0,
-        // except for AA since its our starting point
-        .filter(|v| v.flow_rate > 0 || v.name == ValveName(*b"AA"))
-        .map(|v| v.name)
-        .collect();
-
-    println!("relevant valves {closed_valves:?}");
-
-    // Find shortest path between each valve, and store it in a cache
-    // to avoid running the same operations multiple times in recursion
-    let mut cache: HashMap<(ValveName, ValveName), i32> = HashMap::new();
-    for v1 in closed_valves.iter() {
-        for v2 in closed_valves.iter() {
-            let from = valve_map.get(v1).unwrap();
-            let to = valve_map.get(v2).unwrap();
-            if from.name != to.name {
-                cache.insert(
-                    (*v1, *v2),
-                    get_shortest_path(from, to, &valve_map, vec![], 1),
-                );
-            }
-        }
-    }
-
-    // Starting Valve
-    let a = valve_map.get(&ValveName(['A' as u8, 'A' as u8])).unwrap();
-
-    // Brute force each path to find best score
-    let start = Instant::now();
-    let max_value = brute_force(a, closed_valves, &valve_map, minutes_left, score, &cache);
-    let duration = start.elapsed();
-
-    println!("max value is = {max_value}");
-    println!("time elapsed = {duration:?}");
 }
 
 fn calc_total_score(steps: i32, minutes_left: i32, flow_rate: i32) -> i32 {
@@ -190,7 +132,154 @@ fn get_shortest_path(
         .unwrap()
 }
 
+fn part_one() {
+    // Parsing
+    let valves: Vec<Valve> = include_str!("input.txt")
+        .lines()
+        .map(|line| {
+            let valve = all_consuming(Valve::parse_v2)(line).finish().unwrap().1;
+            return valve;
+        })
+        .collect();
+
+    // Put valves in HashMap for easy access
+    let mut valve_map = HashMap::new();
+    for valve in valves.iter() {
+        valve_map.insert(valve.name, valve);
+    }
+
+    // Starting state
+    let score = 0;
+    let minutes_left = 30;
+    let closed_valves: Vec<ValveName> = valves
+        .iter()
+        // Remove all Valves with a flow rate of 0,
+        // except for AA since its our starting point
+        .filter(|v| v.flow_rate > 0 || v.name == ValveName(*b"AA"))
+        .map(|v| v.name)
+        .collect();
+
+    println!("relevant valves {closed_valves:?}");
+
+    // Find shortest path between each valve, and store it in a cache
+    // to avoid running the same operations multiple times in recursion
+    let mut cache: HashMap<(ValveName, ValveName), i32> = HashMap::new();
+    for v1 in closed_valves.iter() {
+        for v2 in closed_valves.iter() {
+            let from = valve_map.get(v1).unwrap();
+            let to = valve_map.get(v2).unwrap();
+            if from.name != to.name {
+                cache.insert(
+                    (*v1, *v2),
+                    get_shortest_path(from, to, &valve_map, vec![], 1),
+                );
+            }
+        }
+    }
+
+    // Starting Valve
+    let a = valve_map.get(&ValveName(['A' as u8, 'A' as u8])).unwrap();
+
+    // Brute force each path to find best score
+    let start = Instant::now();
+    let max_value = brute_force(a, closed_valves, &valve_map, minutes_left, score, &cache);
+    let duration = start.elapsed();
+
+    println!("max value is = {max_value}");
+    println!("time elapsed = {duration:?}");
+}
+
+fn part_two() {
+    // Parsing
+    let valves: Vec<Valve> = include_str!("input.txt")
+        .lines()
+        .map(|line| {
+            let valve = all_consuming(Valve::parse_v2)(line).finish().unwrap().1;
+            return valve;
+        })
+        .collect();
+
+    // Put valves in HashMap for easy access
+    let mut valve_map = HashMap::new();
+    for valve in valves.iter() {
+        valve_map.insert(valve.name, valve);
+    }
+
+    // Starting state
+    let closed_valves: Vec<ValveName> = valves
+        .iter()
+        // Remove all Valves with a flow rate of 0,
+        // except for AA since its our starting point
+        .filter(|v| v.flow_rate > 0 || v.name == ValveName(*b"AA"))
+        .map(|v| v.name)
+        .collect();
+
+    println!("relevant valves {closed_valves:?}");
+
+    // Find shortest path between each valve, and store it in a cache
+    // to avoid running the same operations multiple times in recursion
+    let mut cache: HashMap<(ValveName, ValveName), i32> = HashMap::new();
+    for v1 in closed_valves.iter() {
+        for v2 in closed_valves.iter() {
+            let from = valve_map.get(v1).unwrap();
+            let to = valve_map.get(v2).unwrap();
+            if from.name != to.name {
+                cache.insert(
+                    (*v1, *v2),
+                    get_shortest_path(from, to, &valve_map, vec![], 1),
+                );
+            }
+        }
+    }
+
+    // Starting Valve
+    let a = valve_map.get(&ValveName(['A' as u8, 'A' as u8])).unwrap();
+
+    // Everything to this point is pretty much the same as Part 1
+
+    // Part 2 begins here
+    //
+    // The idea is to generate each possible combination of "splits"
+    // and brute force both to get a high score, it works for now
+    // but its extremely slow
+
+    let mut max_value = 0;
+    let start = Instant::now();
+
+    for n in 1..closed_valves.len() {
+        let combinations = closed_valves.iter().combinations(n);
+
+        for combination in combinations {
+            let split_a: Vec<ValveName> = combination.into_iter().cloned().collect();
+            let split_b: Vec<ValveName> = closed_valves
+                .iter()
+                .filter(|x| !split_a.contains(x))
+                .cloned()
+                .collect();
+
+            // This is honestly just a stupid assumption
+            // but it halves the computation time and still works
+            if split_a.len() < 5 || split_b.len() < 5 {
+                continue;
+            }
+
+            let combination_score = brute_force(a, split_a, &valve_map, 26, 0, &cache)
+                + brute_force(a, split_b, &valve_map, 26, 0, &cache);
+
+            max_value = cmp::max(combination_score, max_value);
+        }
+    }
+    let duration = start.elapsed();
+
+    println!("max value is = {max_value}");
+    println!("time elapsed = {duration:?}");
+}
+
+// Sample input
+// Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
 fn main() {
     println!("--- PART ONE ---");
     part_one();
+    println!("--- PART TWO ---");
+    part_two();
 }
