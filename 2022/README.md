@@ -16,9 +16,9 @@
 > issues though.
 
 ### Day 16
-> Stored two-letter strings as byte slices in a tuple struct `struct ValveName([u8; 2])`.
-> Brute forced all possible paths to success with recursion.
+> Stored two-letter strings as byte slices in a tuple struct `struct ValveName([u8; 2])`
+> to make use of the Copy trait. Brute forced all possible paths to success with recursion.
 > In part two they introduced an extra "player" which made the pool of possible paths
 > exponentially larger. Brute force still worked though without any further optimisation.
-> Speed dropped from a few ms in part one to about 3 minutes in part two (with a release build)
+> Speed dropped from a few ms in part one to about 3 minutes in part two (with a release build...)
 > Should definitely come back to this one for improvements. Memoization for one.
