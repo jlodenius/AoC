@@ -178,7 +178,7 @@ fn part_one() {
     }
 
     // Starting Valve
-    let a = valve_map.get(&ValveName(['A' as u8, 'A' as u8])).unwrap();
+    let a = valve_map.get(&ValveName(*b"AA")).unwrap();
 
     // Brute force each path to find best score
     let start = Instant::now();
