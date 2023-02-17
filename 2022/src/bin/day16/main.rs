@@ -233,7 +233,7 @@ fn part_two() {
     }
 
     // Starting Valve
-    let a = valve_map.get(&ValveName(['A' as u8, 'A' as u8])).unwrap();
+    let a = valve_map.get(&ValveName(*b"AA")).unwrap();
 
     // Everything to this point is pretty much the same as Part 1
 
