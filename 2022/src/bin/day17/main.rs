@@ -112,7 +112,8 @@ fn part_one() {
 
 fn part_two() {
     let mut jets = include_str!("input.txt").chars();
-    const MAX_ROCKS: usize = 100_000_000_000;
+    const MAX_ROCKS: usize = 1000000000000;
+    const INPUT_LEN: usize = include_str!("input.txt").len();
 
     let rocks = vec![
         vec![[2, 0], [3, 0], [4, 0], [5, 0]],
@@ -126,10 +127,10 @@ fn part_two() {
     let mut chamber: HashSet<[usize; 2]> = (0..7).map(|i| [i, 0]).collect();
     let mut states: HashMap<(u8, [usize; 7]), [usize; 2]> = HashMap::new();
     let mut cycle_found = false;
+    let mut peak_map: HashMap<usize, usize> = HashMap::new();
 
     let mut i = 0;
     while i < MAX_ROCKS {
-        println!("{i}");
         // 1. Get a rock from the array
         let mut rock = rocks[i % 5].clone();
 
@@ -224,7 +225,7 @@ fn part_two() {
                         Some([prev_idx, prev_peak]) => {
                             // Found prev state like this
                             cycle_found = true;
-                            println!("Found prev state from index {prev_idx} to index {i}");
+                            println!("Found cycle from index {prev_idx} to index {i}");
                             let cycle_length = i - prev_idx;
                             let cycle_height = peak - prev_peak;
                             println!("Cycle length {cycle_length}\nCycle height {cycle_height}");
@@ -232,13 +233,23 @@ fn part_two() {
                             println!("Rocks left {rocks_left}");
                             let cycles_to_jump = rocks_left / cycle_length;
                             println!("Cycles to jump {cycles_to_jump}");
-                            // Skip ahead
-                            i = MAX_ROCKS - (rocks_left % cycle_length);
+                            let cycles_left = rocks_left % cycle_length;
+                            println!("Cycles left {cycles_left}");
+
+                            let height_a = peak_map.get(prev_idx).unwrap();
+                            let height_b = peak_map.get(&(prev_idx + (cycles_left - 1))).unwrap();
+
+                            println!("height_a {height_a} height_b {height_b}");
+
+                            // End the while, everything is done here
+                            i = MAX_ROCKS;
                             peak += cycles_to_jump * cycle_height;
+                            peak += height_b - height_a;
                             continue;
                         }
                         _ => {
                             states.insert((current_rock as u8, state), [i, peak]);
+                            peak_map.insert(i, peak);
                         }
                     }
                 }
@@ -249,7 +260,6 @@ fn part_two() {
                 }
             }
         }
-
         i += 1;
     }
 
