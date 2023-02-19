@@ -41,9 +41,14 @@ fn part_one() {
             match movement {
                 '<' => {
                     let mut can_move = true;
-                    for [x, _] in rock.iter() {
+                    for [x, y] in rock.iter() {
                         if *x == 0 {
-                            can_move = false;
+                            can_move = false; // The edge prevents movement
+                        } else {
+                            match chamber.get(&[*x - 1, *y]) {
+                                Some(_) => can_move = false, // Another rock prevents movement
+                                _ => {}
+                            }
                         }
                     }
                     if can_move {
@@ -57,9 +62,14 @@ fn part_one() {
                 }
                 '>' => {
                     let mut can_move = true;
-                    for [x, _] in rock.iter() {
+                    for [x, y] in rock.iter() {
                         if *x == 6 {
-                            can_move = false;
+                            can_move = false; // The edge prevents movement
+                        } else {
+                            match chamber.get(&[*x + 1, *y]) {
+                                Some(_) => can_move = false, // Another rock prevents movement
+                                _ => {}
+                            }
                         }
                     }
                     if can_move {
