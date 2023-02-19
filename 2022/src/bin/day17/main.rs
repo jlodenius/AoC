@@ -237,20 +237,25 @@ fn part_two() {
                             let cycles_left = rocks_left % cycle_length;
                             println!("Cycles left {cycles_left}");
 
-                            let height_prev = peak_map.get(prev_idx).unwrap();
-                            let height_curr =
-                                peak_map.get(&(prev_idx + (cycles_left - 1))).unwrap();
-
-                            println!("height_prev {height_prev} height_curr {height_curr}");
+                            let height_after_cycles_left =
+                                peak_map.get(&(prev_idx + (cycles_left - 1))).unwrap(); // Not sure
+                                                                                        // why -1 is necessary here
+                                                                                        // but it works for sample input
+                            println!(
+                                "Height between idx {prev_idx} and {} = {height_after_cycles_left}",
+                                cycles_left - 1
+                            );
 
                             // End the while, everything is done here
                             i = MAX_ROCKS;
                             peak += cycles_to_jump * cycle_height;
-                            peak += height_curr - height_prev;
+                            peak += height_after_cycles_left - prev_peak;
                             continue;
                         }
                         _ => {
                             states.insert((current_rock as u8, state, jet_pos), [i, peak]);
+                            // This makes things much slower than necessary
+                            // but cba to refactor atm
                             peak_map.insert(i, peak);
                         }
                     }
