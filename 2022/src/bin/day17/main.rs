@@ -85,14 +85,9 @@ fn part_one() {
             }
 
             // Check for collision
-            for [x, y] in rock.iter() {
-                match chamber.get(&[*x, *y - 1]) {
-                    Some(_) => {
-                        stopped = true;
-                    }
-                    _ => {}
-                }
-            }
+            stopped = rock
+                .iter()
+                .any(|[x, y]| chamber.get(&[*x, *y - 1]).is_some());
 
             // If collision, update peak and chamber
             if stopped {
