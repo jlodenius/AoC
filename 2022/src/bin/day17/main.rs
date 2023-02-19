@@ -209,7 +209,7 @@ fn part_two() {
                 // Find cycles (THIS IS MOST OF THE PART 2 STUFF)
                 if !cycle_found {
                     let current_rock = i % 5;
-                    let jet_pos = i % INPUT_LEN;
+                    let jet_pos = (i + 1) % INPUT_LEN;
                     let mut state: [usize; 7] = [0; 7];
                     for chamber_i in 0..7 {
                         let max_y = chamber
@@ -230,7 +230,7 @@ fn part_two() {
                             let cycle_length = i - prev_idx;
                             let cycle_height = peak - prev_peak;
                             println!("Cycle length {cycle_length}\nCycle height {cycle_height}");
-                            let rocks_left = MAX_ROCKS - i;
+                            let rocks_left = MAX_ROCKS - (i + 1);
                             println!("Rocks left {rocks_left}");
                             let cycles_to_jump = rocks_left / cycle_length;
                             println!("Cycles to jump {cycles_to_jump}");
@@ -238,9 +238,8 @@ fn part_two() {
                             println!("Cycles left {cycles_left}");
 
                             let height_after_cycles_left =
-                                peak_map.get(&(prev_idx + (cycles_left - 1))).unwrap(); // Not sure
-                                                                                        // why -1 is necessary here
-                                                                                        // but it works for sample input
+                                peak_map.get(&(prev_idx + cycles_left)).unwrap();
+
                             println!(
                                 "Height between idx {prev_idx} and {} = {height_after_cycles_left}",
                                 cycles_left - 1
