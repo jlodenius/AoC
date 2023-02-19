@@ -241,8 +241,7 @@ fn part_two() {
                                 peak_map.get(&(prev_idx + cycles_left)).unwrap();
 
                             println!(
-                                "Height between idx {prev_idx} and {} = {height_after_cycles_left}",
-                                cycles_left - 1
+                                "Height between idx {prev_idx} and {cycles_left} = {height_after_cycles_left}",
                             );
 
                             // End the while, everything is done here
