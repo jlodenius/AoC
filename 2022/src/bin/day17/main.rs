@@ -113,7 +113,7 @@ fn part_one() {
 fn part_two() {
     let mut jets = include_str!("input.txt").chars();
     const MAX_ROCKS: usize = 1000000000000;
-    const INPUT_LEN: usize = include_str!("input.txt").len();
+    const INPUT_LEN: usize = include_str!("input.txt").len() - 1; // -1 to remove new line char
 
     let rocks = vec![
         vec![[2, 0], [3, 0], [4, 0], [5, 0]],
@@ -125,7 +125,7 @@ fn part_two() {
 
     let mut peak: usize = 0;
     let mut chamber: HashSet<[usize; 2]> = (0..7).map(|i| [i, 0]).collect();
-    let mut states: HashMap<(u8, [usize; 7]), [usize; 2]> = HashMap::new();
+    let mut states: HashMap<(u8, [usize; 7], usize), [usize; 2]> = HashMap::new();
     let mut cycle_found = false;
     let mut peak_map: HashMap<usize, usize> = HashMap::new();
 
@@ -209,6 +209,7 @@ fn part_two() {
                 // Find cycles (THIS IS MOST OF THE PART 2 STUFF)
                 if !cycle_found {
                     let current_rock = i % 5;
+                    let jet_pos = i % INPUT_LEN;
                     let mut state: [usize; 7] = [0; 7];
                     for chamber_i in 0..7 {
                         let max_y = chamber
@@ -221,7 +222,7 @@ fn part_two() {
                         let value = old_peak + 4 - *max_y;
                         state[chamber_i as usize] = value;
                     }
-                    match states.get(&(current_rock as u8, state)) {
+                    match states.get(&(current_rock as u8, state, jet_pos)) {
                         Some([prev_idx, prev_peak]) => {
                             // Found prev state like this
                             cycle_found = true;
@@ -236,19 +237,20 @@ fn part_two() {
                             let cycles_left = rocks_left % cycle_length;
                             println!("Cycles left {cycles_left}");
 
-                            let height_a = peak_map.get(prev_idx).unwrap();
-                            let height_b = peak_map.get(&(prev_idx + (cycles_left - 1))).unwrap();
+                            let height_prev = peak_map.get(prev_idx).unwrap();
+                            let height_curr =
+                                peak_map.get(&(prev_idx + (cycles_left - 1))).unwrap();
 
-                            println!("height_a {height_a} height_b {height_b}");
+                            println!("height_prev {height_prev} height_curr {height_curr}");
 
                             // End the while, everything is done here
                             i = MAX_ROCKS;
                             peak += cycles_to_jump * cycle_height;
-                            peak += height_b - height_a;
+                            peak += height_curr - height_prev;
                             continue;
                         }
                         _ => {
-                            states.insert((current_rock as u8, state), [i, peak]);
+                            states.insert((current_rock as u8, state, jet_pos), [i, peak]);
                             peak_map.insert(i, peak);
                         }
                     }
