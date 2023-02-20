@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 
 fn part_one() {
     let mut jets = include_str!("input.txt").chars();
@@ -126,10 +127,13 @@ fn part_two() {
     let mut peak: usize = 0;
     let mut chamber: HashSet<[usize; 2]> = (0..7).map(|i| [i, 0]).collect();
     let mut state_map: HashMap<(usize, [usize; 7], usize), [usize; 2]> = HashMap::new();
-    let mut peak_map: HashMap<usize, usize> = HashMap::new();
+
+    // Testing
+    let mut peak_in_cycles: usize = 0;
+    let mut cycle_found = false;
 
     let mut i = 0;
-    'main_loop: while i < MAX_ROCKS {
+    while i < MAX_ROCKS {
         // 1. Get a rock from the array
         let mut rock = rocks[i % 5].clone();
 
@@ -140,7 +144,7 @@ fn part_two() {
 
         // 3. Move rock until it stops
         let mut stopped = false;
-        while stopped == false {
+        while !stopped {
             // Move sideways
             let movement = {
                 match jets.next() {
@@ -210,6 +214,7 @@ fn part_two() {
                 let jet_pos = (i + 1) % INPUT_LEN;
 
                 let mut chamber_state: [usize; 7] = [0; 7];
+                let mut smallest = usize::MAX;
                 for chamber_i in 0..7 {
                     let max_y = chamber
                         .iter()
@@ -217,47 +222,37 @@ fn part_two() {
                         .map(|[_, y]| y)
                         .max()
                         .unwrap();
-
-                    let value = old_peak + 4 - *max_y; // any large number just to avoid usize becoming
-                                                       // negative, kinda ugly solution but quicker than
-                                                       // iterating through everything and finding the smallest number
-                    chamber_state[chamber_i] = value;
+                    chamber_state[chamber_i] = *max_y;
+                    smallest = std::cmp::min(smallest, *max_y);
+                }
+                for val in chamber_state.iter_mut() {
+                    *val -= smallest;
                 }
                 i += 1;
 
-                match state_map.get(&(current_rock, chamber_state, jet_pos)) {
-                    Some([prev_idx, prev_peak]) => {
-                        // Found prev state
-                        println!("Found cycle from index {prev_idx} to index {i}");
-                        let cycle_length = i - prev_idx;
-                        let cycle_height = peak - prev_peak;
-                        println!("Cycle length {cycle_length}\nCycle height {cycle_height}");
-                        let rocks_left = MAX_ROCKS - (i + 1);
-                        println!("Rocks left {rocks_left}");
-                        let cycles_to_jump = (MAX_ROCKS - i) / cycle_length;
-                        println!("Cycles to jump {cycles_to_jump}");
-                        let rocks_left_after_jump = rocks_left % cycle_length;
-                        println!("Rocks left after jump {rocks_left_after_jump}");
+                if !cycle_found {
+                    match state_map.get(&(current_rock, chamber_state, jet_pos)) {
+                        Some([prev_idx, prev_peak]) => {
+                            // Found prev state
+                            println!("Found cycle from index {prev_idx} to index {i}");
+                            let cycle_length = i - prev_idx;
+                            let cycle_height = peak - prev_peak;
+                            println!("Cycle length {cycle_length}\nCycle height {cycle_height}");
+                            let rocks_left = MAX_ROCKS - i;
+                            println!("Rocks left {rocks_left}");
+                            let cycles_to_jump = (MAX_ROCKS - i) / cycle_length;
+                            println!("Cycles to jump {cycles_to_jump}");
+                            let rocks_left_after_jump = rocks_left % cycle_length;
+                            println!("Rocks left after jump {rocks_left_after_jump}");
 
-                        let height_after_cycles_left =
-                            peak_map.get(&(prev_idx + rocks_left_after_jump)).unwrap();
-
-                        println!(
-                            "Height between idx {} and {} = {}",
-                            prev_idx,
-                            prev_idx + rocks_left_after_jump,
-                            height_after_cycles_left - prev_peak,
-                        );
-
-                        peak += cycles_to_jump * cycle_height;
-                        peak += height_after_cycles_left - prev_peak;
-
-                        // We are done here
-                        break 'main_loop;
-                    }
-                    _ => {
-                        state_map.insert((current_rock, chamber_state, jet_pos), [i, peak]);
-                        peak_map.insert(i, peak); // Bad performance..
+                            peak_in_cycles = cycles_to_jump * cycle_height;
+                            i += cycles_to_jump * cycle_length;
+                            cycle_found = true;
+                            println!("NEW i {i}");
+                        }
+                        _ => {
+                            state_map.insert((current_rock, chamber_state, jet_pos), [i, peak]);
+                        }
                     }
                 }
             } else {
@@ -269,12 +264,15 @@ fn part_two() {
         }
     }
 
-    println!("\n\nPeak = {peak}");
+    println!("\n\nPeak = {}", peak + peak_in_cycles);
 }
 
 fn main() {
     // println!("--- PART ONE ---");
     // part_one();
     println!("--- PART TWO ---");
+    let start = Instant::now();
     part_two();
+    let duration = start.elapsed();
+    println!("time elapsed = {duration:?}");
 }
