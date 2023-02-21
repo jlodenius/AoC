@@ -128,7 +128,7 @@ fn part_two() {
     let mut chamber: HashSet<[usize; 2]> = (0..7).map(|i| [i, 0]).collect();
     let mut state_map: HashMap<(usize, [usize; 7], usize), [usize; 2]> = HashMap::new();
 
-    // Testing
+    // For when we find a cycle
     let mut peak_in_cycles: usize = 0;
     let mut cycle_found = false;
 
@@ -206,8 +206,7 @@ fn part_two() {
                     chamber.insert([*x, *y]);
                 }
                 let new_peak = *rock.iter().map(|[_, y]| y).max().unwrap();
-                let old_peak = peak;
-                peak = std::cmp::max(new_peak, old_peak);
+                peak = std::cmp::max(new_peak, peak);
 
                 // Find cycles (THIS IS MOST OF THE PART 2 STUFF)
                 let current_rock = i % 5;
@@ -248,7 +247,6 @@ fn part_two() {
                             peak_in_cycles = cycles_to_jump * cycle_height;
                             i += cycles_to_jump * cycle_length;
                             cycle_found = true;
-                            println!("NEW i {i}");
                         }
                         _ => {
                             state_map.insert((current_rock, chamber_state, jet_pos), [i, peak]);
