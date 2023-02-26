@@ -22,3 +22,7 @@
 > exponentially larger. Brute force still worked though without any further optimisation.
 > Speed dropped from a few ms in part one to about 3 minutes in part two (with a release build...)
 > Should definitely come back to this one for improvements. Memoization for one.
+
+### Day 17
+> Not sure why part 2 is not giving me the right answer, works for sample input but not the real.
+> Leaving this one for now and moving on.
